@@ -20,14 +20,13 @@ checkout   Restore a file.`
 )
 
 func main() {
-	if len(os.Args) != 2 {
+	if len(os.Args) == 1 {
 		fmt.Println(help)
 		return
 	}
 
-	createFiles()
-	writeDefaultValues()
-	// TODO try reading form input rather than from CLI
+	createVCSFiles()
+
 	command := os.Args[1]
 	switch command {
 	case "--help":
@@ -68,7 +67,7 @@ func printTrackedFiles(files []string) {
 }
 
 func getTrackedFiles() (trackedFiles []string) {
-	file, _ := os.Open(".vcs/index.txt")
+	file, _ := os.Open("./vcs/index.txt")
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
@@ -82,7 +81,7 @@ func getTrackedFiles() (trackedFiles []string) {
 }
 
 func readConfigName() (name string) {
-	file, _ := os.Open(".vcs/config.txt")
+	file, _ := os.Open("./vcs/config.txt")
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
@@ -137,9 +136,9 @@ func configCommand(args []string) {
 	if len(args) == 2 && strings.TrimSpace(name) == "" { // config, no new name passed
 		fmt.Println("Please, tell me who you are.")
 	} else if len(args) == 2 { // config, no new name passed, with a name already set in config.txt
-		fmt.Println("The username is,", name)
+		fmt.Println("The username is", name)
 	} else if len(args) == 3 { // config, new name passed
-		updateConfigName(name)
+		updateConfigName(args[2])
 	}
 
 	return
@@ -149,12 +148,30 @@ func updateConfigName(name string) {
 	file, _ := os.Create("./vcs/config.txt")
 	defer file.Close()
 	fmt.Fprintln(file, "name:", name)
+
+	fmt.Printf("The username is %s.\n", name)
 	return
 }
 
-func createFiles() {
-	os.Mkdir("./vcs", os.ModePerm)
-	os.Create("./vcs/config.txt")
-	os.Create("./vcs/index.txt")
+func createVCSFiles() {
+	var writeDefaults bool
+
+	if _, err := os.Stat("./vcs"); os.IsNotExist(err) {
+		os.Mkdir("./vcs", os.ModePerm)
+		writeDefaults = true
+	}
+	if _, err := os.Stat("./vcs/config.txt"); os.IsNotExist(err) {
+		fileConfig, _ := os.Create("./vcs/config.txt")
+		defer fileConfig.Close()
+	}
+	if _, err := os.Stat("./vcs/index.txt"); os.IsNotExist(err) {
+		fileConfig, _ := os.Create("./vcs/index.txt")
+		defer fileConfig.Close()
+	}
+
+	if writeDefaults {
+		writeDefaultValues()
+	}
+
 	return
 }
