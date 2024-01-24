@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"slices"
 	"strings"
 )
 
@@ -45,9 +44,6 @@ func main() {
 	default:
 		fmt.Printf("'%s' is not a SVCS command.", command)
 	}
-
-	fmt.Println()
-	return
 }
 
 func addCommand(args []string) {
@@ -56,9 +52,7 @@ func addCommand(args []string) {
 		fmt.Println("Add a file to the index.")
 	} else if len(args) == 2 { // add, with currently tracked files
 		printTrackedFiles(trackedFiles)
-	} else if len(args) == 3 && slices.Contains(trackedFiles, args[2]) { // add, with a file argument
-		fmt.Printf("The file '%s' is tracked.\n", args[2])
-	} else if len(args) == 3 {
+	} else if len(args) == 3 { // add, new file to be tracked
 		addFileToIndex(args[2])
 	}
 }
@@ -106,14 +100,14 @@ func readConfigName() (name string) {
 
 func addFileToIndex(fileName string) {
 	file, err := os.OpenFile("./vcs/index.txt", os.O_WRONLY|os.O_APPEND, 0664)
-	if err == nil {
+	if err != nil {
 		fmt.Printf("Can't find '%s'.\n", fileName)
 		return
 	}
 	defer file.Close()
 
 	fmt.Fprintln(file, fileName)
-	fmt.Printf("The file '%s' is tracked.\n", fileName)
+	fmt.Printf("The file '%s' is tracked\n", fileName)
 	return
 }
 
