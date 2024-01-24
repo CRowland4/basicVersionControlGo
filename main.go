@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -44,6 +45,9 @@ func main() {
 	default:
 		fmt.Printf("'%s' is not a SVCS command.", command)
 	}
+
+	fmt.Println()
+	return
 }
 
 func addCommand(args []string) {
@@ -52,7 +56,9 @@ func addCommand(args []string) {
 		fmt.Println("Add a file to the index.")
 	} else if len(args) == 2 { // add, with currently tracked files
 		printTrackedFiles(trackedFiles)
-	} else if len(args) == 3 { // add, new file to be tracked
+	} else if len(args) == 3 && slices.Contains(trackedFiles, args[2]) { // add, with a file argument
+		fmt.Printf("The file '%s' is tracked.\n", args[2])
+	} else if len(args) == 3 {
 		addFileToIndex(args[2])
 	}
 }
@@ -87,9 +93,11 @@ func readConfigName() (name string) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		fields := strings.Fields(scanner.Text())
-		if strings.Contains(fields[0], "name") || fields[1] != "" {
-			name = fields[1]
-			break
+		if strings.Contains(fields[0], "name") && len(fields) == 1 {
+			return ""
+		}
+		if strings.Contains(fields[0], "name") && len(fields) == 2 {
+			return fields[1]
 		}
 	}
 
@@ -98,14 +106,14 @@ func readConfigName() (name string) {
 
 func addFileToIndex(fileName string) {
 	file, err := os.OpenFile("./vcs/index.txt", os.O_WRONLY|os.O_APPEND, 0664)
-	if err != nil {
+	if err == nil {
 		fmt.Printf("Can't find '%s'.\n", fileName)
 		return
 	}
 	defer file.Close()
 
 	fmt.Fprintln(file, fileName)
-	fmt.Printf("The file '%s' is tracked\n", fileName)
+	fmt.Printf("The file '%s' is tracked.\n", fileName)
 	return
 }
 
@@ -136,7 +144,7 @@ func configCommand(args []string) {
 	if len(args) == 2 && strings.TrimSpace(name) == "" { // config, no new name passed
 		fmt.Println("Please, tell me who you are.")
 	} else if len(args) == 2 { // config, no new name passed, with a name already set in config.txt
-		fmt.Println("The username is", name)
+		fmt.Printf("The username is %s.\n", name)
 	} else if len(args) == 3 { // config, new name passed
 		updateConfigName(args[2])
 	}
