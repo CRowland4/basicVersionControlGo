@@ -107,7 +107,7 @@ func addFileToIndex(fileName string) {
 	defer file.Close()
 
 	fmt.Fprintln(file, fileName)
-	fmt.Printf("The file '%s' is tracked\n", fileName)
+	fmt.Printf("The file '%s' is tracked.\n", fileName)
 	return
 }
 
