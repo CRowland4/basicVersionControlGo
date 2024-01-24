@@ -57,15 +57,6 @@ func addCommand(args []string) {
 	}
 }
 
-func printTrackedFiles(files []string) {
-	fmt.Println("Tracked files:")
-	for _, file := range files {
-		fmt.Println(file)
-	}
-
-	return
-}
-
 func getTrackedFiles() (trackedFiles []string) {
 	file, _ := os.Open("./vcs/index.txt")
 	defer file.Close()
@@ -76,8 +67,30 @@ func getTrackedFiles() (trackedFiles []string) {
 			trackedFiles = append(trackedFiles, scanner.Text())
 		}
 	}
-
 	return trackedFiles
+}
+
+func addFileToIndex(fileName string) {
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 777)
+	if err != nil {
+		fmt.Printf("Can't find '%s'.", fileName)
+		return
+	}
+	defer file.Close()
+
+	indexFile, _ := os.OpenFile("./vcs/index.txt", os.O_WRONLY|os.O_APPEND, 777)
+	indexFile.Write([]byte(fileName + "\n"))
+	fmt.Printf("The file '%s' is tracked.\n", fileName)
+	return
+}
+
+func printTrackedFiles(files []string) {
+	fmt.Println("Tracked files:")
+	for _, file := range files {
+		fmt.Println(file)
+	}
+
+	return
 }
 
 func readConfigName() (name string) {
@@ -98,19 +111,6 @@ func readConfigName() (name string) {
 	return name
 }
 
-func addFileToIndex(fileName string) {
-	file, err := os.OpenFile("./vcs/index.txt", os.O_WRONLY|os.O_APPEND, 0664)
-	if err != nil {
-		fmt.Printf("Can't find '%s'.\n", fileName)
-		return
-	}
-	defer file.Close()
-
-	fmt.Fprintln(file, fileName)
-	fmt.Printf("The file '%s' is tracked.\n", fileName)
-	return
-}
-
 func writeDefaultValues() {
 	writeDefaultConfigValues()
 	writeDefaultIndexValues()
@@ -118,18 +118,18 @@ func writeDefaultValues() {
 }
 
 func writeDefaultIndexValues() {
-	file, _ := os.OpenFile("./vcs/index.txt", os.O_WRONLY|os.O_APPEND, 0644)
+	file, _ := os.OpenFile("./vcs/index.txt", os.O_WRONLY|os.O_APPEND, 777)
 	defer file.Close()
 
-	fmt.Fprintln(file, "Tracked files:")
+	file.Write([]byte("Tracked files:\n"))
 	return
 }
 
 func writeDefaultConfigValues() {
-	file, _ := os.OpenFile("./vcs/config.txt", os.O_WRONLY|os.O_APPEND, 0644)
+	file, _ := os.OpenFile("./vcs/config.txt", os.O_WRONLY|os.O_APPEND, 777)
 	defer file.Close()
 
-	fmt.Fprintln(file, "name: ")
+	file.Write([]byte("name: "))
 	return
 }
 
@@ -149,7 +149,7 @@ func configCommand(args []string) {
 func updateConfigName(name string) {
 	file, _ := os.Create("./vcs/config.txt")
 	defer file.Close()
-	fmt.Fprintln(file, "name:", name)
+	file.Write([]byte("name: " + name))
 
 	fmt.Printf("The username is %s.\n", name)
 	return
